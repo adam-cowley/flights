@@ -4,6 +4,9 @@ import org.neo4j.graphdb.Label;
 
 public enum Labels implements Label {
 
-    Airport
+    Airport,
+    AirportDay,
+    AirportDestination,
+    Segment
 
 }

@@ -11,6 +11,10 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.harness.junit.Neo4jRule;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -22,12 +26,17 @@ public class ValidRoutesTest {
     public Neo4jRule neo4j = new Neo4jRule()
             .withProcedure( ValidRoutes.class )
             .withFixture("CREATE CONSTRAINT ON (node:Airport) ASSERT (node.code) IS UNIQUE")
+            .withFixture("CREATE CONSTRAINT ON (node:AirportDay) ASSERT (node.code) IS UNIQUE")
+            .withFixture("CREATE CONSTRAINT ON (node:AirportDestination) ASSERT (node.code) IS UNIQUE")
+            .withFixture("CREATE CONSTRAINT ON (node:Segment) ASSERT (node.code) IS UNIQUE")
             .withFixture("CREATE CONSTRAINT ON (node:`UNIQUE IMPORT LABEL`) ASSERT (node.`UNIQUE IMPORT ID`) IS UNIQUE")
             .withFixture(
-                    new File(
-                        getClass().getClassLoader().getResource("cypher/fliesto.cypher").getFile()
-                    )
-            );
+                new File(
+                    getClass().getClassLoader().getResource("cypher/all.cypher").getFile()
+                )
+            )
+//            .copyFrom( new File("/Users/adam/Library/Application Support/Neo4j Desktop/Application/neo4jDatabases/database-f6b4d488-a224-4bd8-9604-db6da4a0f483/installation-3.5.8/data") )
+            ;
 
 
     @Test
@@ -63,4 +72,46 @@ public class ValidRoutesTest {
             System.out.println(routes);
         }
     }
+
+    @Test
+    public void shouldFindFlightsBetweenAirportWithNoStopovers() {
+        GraphDatabaseService db = neo4j.getGraphDatabaseService();
+
+        try ( Transaction tx = db.beginTx() ) {
+            Result res = db.execute( "CALL flights.between('IBZ', 'MAD', date('2019-09-22'))" );
+
+            System.out.println("");
+            System.out.println("");
+
+
+            while ( res.hasNext() ) {
+                Map<String,Object> row = res.next();
+
+                System.out.println("");
+                System.out.println("--");
+                System.out.println("Res:" + row);
+            }
+        }
+    }
+
+    @Test
+    public void shouldFindFlightsBetweenAirportWithOneStopovers() {
+        GraphDatabaseService db = neo4j.getGraphDatabaseService();
+
+        try ( Transaction tx = db.beginTx() ) {
+            Result res = db.execute( "CALL flights.between('IBZ', 'JFK', date('2019-09-22'))" );
+
+            System.out.println("");
+            System.out.println("");
+
+            while ( res.hasNext() ) {
+                Map<String,Object> row = res.next();
+
+                System.out.println("");
+                System.out.println("--");
+                System.out.println("Res:" + row);
+            }
+        }
+    }
+
 }

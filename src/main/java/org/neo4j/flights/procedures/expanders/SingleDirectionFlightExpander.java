@@ -60,39 +60,44 @@ public class SingleDirectionFlightExpander implements PathExpander<DiscoveryStat
     }
 
     private Iterable<Relationship> expandToSegment( Path path, BranchState<DiscoveryState> state ) {
-        ZonedDateTime expansionDate = start;
-        ZonedDateTime endExpansion = end;
+//        ZonedDateTime expansionDate = start;
+//        ZonedDateTime endExpansion = end;
+//
+//        Node start = path.startNode();
+//
+//        // (:Airport)-[:DATED_REL]->(:Segment)-[:DATED_REL]->()
+//
+//        if ( path.length() > 0 ) {
+//            expansionDate = DateUtils.relationshipTypeToZonedDateTime( path.lastRelationship().getType() ).plusHours( minStopoverHours );
+//            endExpansion = expansionDate.plusHours( maxStopoverHours );
+//
+//            start = path.lastRelationship().getEndNode();
+//        }
+//
+//        List<Relationship> relationships = new ArrayList<>(  );
+//
+//        while ( expansionDate.isBefore( endExpansion ) ) {
+//
+//            RelationshipType type = RelationshipType.withName( expansionDate.format( relationshipFormat ) );
+//            System.out.println(type.toString());
+//            for ( Relationship rel : start.getRelationships(type, Direction.OUTGOING ) ) {
+//                relationships.add(rel);
+//            }
+//
+//            expansionDate = expansionDate.plusHours( 1 );
+//        }
+//
+//        System.out.println(relationships.size());
+//
+//        return relationships;
 
-        Node start = path.startNode();
-
-        // (:Airport)-[:DATED_REL]->(:Segment)-[:DATED_REL]->()
-
-        if ( path.length() > 0 ) {
-            expansionDate = DateUtils.relationshipTypeToZonedDateTime( path.lastRelationship().getType() ).plusHours( minStopoverHours );
-            endExpansion = expansionDate.plusHours( maxStopoverHours );
-
-            start = path.lastRelationship().getEndNode();
-        }
-
-        List<Relationship> relationships = new ArrayList<>(  );
-
-        while ( expansionDate.isBefore( endExpansion ) ) {
-            RelationshipType type = RelationshipType.withName( expansionDate.format( relationshipFormat ) );
-
-            for ( Relationship rel : start.getRelationships(type, Direction.OUTGOING ) ) {
-                relationships.add(rel);
-            }
-
-            expansionDate = expansionDate.plusHours( 1 );
-        }
-
-        return relationships;
+        return Collections.EMPTY_LIST;
     }
 
     private Iterable<Relationship> expandToAirport( Path path, BranchState<DiscoveryState> state ) {
         // Increment State
         DiscoveryState discoveryState = state.getState();
-        discoveryState.increasePrice( (Float) path.endNode().getProperty( "price" ) );
+        discoveryState.increasePrice( (Double) path.endNode().getProperty( "price" ) );
 
         state.setState( discoveryState );
 
