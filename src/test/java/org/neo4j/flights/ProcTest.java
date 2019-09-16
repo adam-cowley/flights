@@ -27,7 +27,7 @@ public class ProcTest
                     "CREATE (a3:Airport {code: 'JFK'}) " +
                     "CREATE (a1)-[:`2019070100`]->(:Segment {id: 1,price:50.0})-[:`2019070102`]->(a2) " +
                     "CREATE (a2)-[:`2019070103`]->(:Segment {id: 2,price:50.0})-[:`2019070107`]->(a3) " +
-                    "CREATE (a2)-[:`2019070100`]->(:Segment {id: 3,price:50.0})-[:`2019070105`]->(a3)"
+                    "CREATE (a2)-[:`2019070100`]->(:Segment {id: 3,price:50.0})-[:`2019070105`]->(a3)" +
                     "CREATE (a2)-[:`2019070112`]->(:Segment {id: 3,price:200.00})-[:`2019070105`]->(a3)"
             )
 //            .copyFrom( new File("/Users/adam/Library/Application Support/Neo4j Desktop/Application/neo4jDatabases/database-5e861f6f-3354-4c95-9b9f-996ecfc5ae83/installation-3.5.7/data") )

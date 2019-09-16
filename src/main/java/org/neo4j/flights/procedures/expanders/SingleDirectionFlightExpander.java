@@ -38,11 +38,15 @@ public class SingleDirectionFlightExpander implements PathExpander<DiscoveryStat
         this.airports = airports;
     }
 
+    public void checkGuard() {
+        guard.check();
+    }
+
     @Override
     public Iterable<Relationship> expand( Path path, BranchState<DiscoveryState> state )
     {
         // Check for a terminated query before expanding
-        guard.check();
+        checkGuard();
 
         // Expand to Segment
         if ( path.length() % 2 == 0 ) {
