@@ -1,11 +1,11 @@
 package org.neo4j.flights.procedures;
 
-import org.neo4j.flights.procedures.evaluators.getflights.FlightEvaluator;
 import org.neo4j.flights.procedures.evaluators.validpaths.ValidPathCollisionEvaluator;
-import org.neo4j.flights.procedures.expanders.getflights.FlightExpander;
 import org.neo4j.flights.procedures.expanders.validpaths.BidirectionalValidPathExpander;
-import org.neo4j.flights.procedures.result.AirportRouteResult;
+import org.neo4j.flights.procedures.services.validroutes.ValidRouteResult;
 import org.neo4j.flights.procedures.result.FlightResult;
+import org.neo4j.flights.procedures.services.flightsbetween.FlightsBetweenService;
+import org.neo4j.flights.procedures.services.validroutes.ValidRoutesService;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.traversal.*;
 import org.neo4j.procedure.Context;
@@ -14,8 +14,6 @@ import org.neo4j.procedure.Procedure;
 import org.neo4j.procedure.TerminationGuard;
 
 import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +38,7 @@ public class ValidRoutes {
     // single direction expander - takes ages to finish
 
     @Procedure( name = "flights.validRoutes" )
-    public Stream<AirportRouteResult> validRoutesCypher(
+    public Stream<ValidRouteResult> validRoutesCypher(
             @Name("originCode") String originCode,
             @Name("destinationCode") String destinationCode,
             @Name(value = "maxStopovers", defaultValue = "3") Long maxStopovers,
@@ -54,14 +52,14 @@ public class ValidRoutes {
 
         Result res = db.execute("MATCH route = (:Airport {code: $originCode})-[:FLIES_TO*1..3]->(:Airport {code: $destinationCode}) " +
                 "WITH route, reduce(acc = 0, rel IN relationships(route) | acc + rel.distance ) AS cost " +
-                "RETURN route ORDER BY cost DESC LIMIT 10", params);
+                "RETURN route ORDER BY cost ASC LIMIT 10", params);
 
-        List<AirportRouteResult> output = new ArrayList<>();
+        List<ValidRouteResult> output = new ArrayList<>();
 
         while (res.hasNext()) {
             Map<String, Object> row = res.next();
 
-            output.add(new AirportRouteResult((Path) row.get("route")));
+            output.add(new ValidRouteResult((Path) row.get("route")));
         }
 
         return output.stream();
@@ -69,34 +67,19 @@ public class ValidRoutes {
 
     // TODO: Failed to invoke procedure `flights.validRoutes`: Caused by: org.neo4j.graphdb.NotFoundException: Node[150] not connected to this relationship[342]
     @Procedure( name = "flights.validRoutesTraverse" )
-    public Stream<AirportRouteResult> validRoutes(
+    public Stream<ValidRouteResult> validRoutes(
             @Name("originCode") String originCode,
             @Name("destinationCode") String destinationCode,
             @Name(value = "maxPrice", defaultValue = "500.00") Double maxPrice,
             @Name(value = "maxStopovers", defaultValue = "3") Long maxStopovers
     ) {
-        try ( Transaction tx = db.beginTx() ) {
-            // Get airport nodes
-            Node origin = db.findNode(Airport, PROPERTY_CODE, originCode);
-            Node destination = db.findNode(Airport, PROPERTY_CODE, destinationCode);
+        // Get airport nodes
+        Node origin = db.findNode(Airport, PROPERTY_CODE, originCode);
+        Node destination = db.findNode(Airport, PROPERTY_CODE, destinationCode);
 
-            InitialBranchState.State<Double> initialState = new InitialBranchState.State<Double>(0d, 0d);
-            BidirectionalValidPathExpander bidirectionalValidPathExpander = new BidirectionalValidPathExpander();
+        ValidRoutesService service = new ValidRoutesService(db, maxStopovers, maxPrice);
 
-            TraversalDescription td = db.traversalDescription()
-                    .breadthFirst()
-                    .expand(bidirectionalValidPathExpander, initialState)
-                    .uniqueness(Uniqueness.NODE_PATH)
-                    .evaluator(Evaluators.toDepth(maxStopovers.intValue()));
-
-            BidirectionalTraversalDescription btd = db.bidirectionalTraversalDescription()
-                    .mirroredSides(td)
-                    .collisionEvaluator(new ValidPathCollisionEvaluator());
-
-            return btd.traverse(origin, destination)
-                    .stream()
-                    .map(AirportRouteResult::new);
-        }
+        return service.between(origin, destination);
     }
 
 
@@ -108,12 +91,10 @@ public class ValidRoutes {
             @Name(value = "maxStopovers", defaultValue = "3") Long maxStopovers,
             @Name(value = "maxPrice", defaultValue = "500.00") Double maxPrice
     ) {
-        ZonedDateTime startTime = date.atStartOfDay( ZoneOffset.UTC );
-
         Node origin = db.findNode( Airport, PROPERTY_CODE, originCode );
         Node destination = db.findNode( Airport, PROPERTY_CODE, destinationCode );
 
-        Stream<AirportRouteResult> validRoutes = validRoutesCypher(originCode, destinationCode, maxStopovers, maxPrice);
+        Stream<ValidRouteResult> validRoutes = validRoutesCypher(originCode, destinationCode, maxStopovers, maxPrice);
 
         Set<Node> airports = new HashSet<>();
 
@@ -123,27 +104,23 @@ public class ValidRoutes {
 
         airports.remove( origin );
 
-        // Initial State
-        InitialBranchState.State<DiscoveryState> initialState = new InitialBranchState.State<>( new DiscoveryState(), new DiscoveryState() );
+        FlightsBetweenService service = new FlightsBetweenService(db, guard);
 
-        // Expander
-        FlightExpander expander = new FlightExpander( guard, startTime, airports, maxPrice, maxStopovers );
+        return service.between(origin, destination, date, maxPrice, maxStopovers, airports);
+    }
 
-        // Evaluator
-        FlightEvaluator evaluator = new FlightEvaluator(destination, maxPrice, maxStopovers);
+    @Procedure(name = "flights.betweenWithAirports")
+    public Stream<FlightResult> getFlightsBetweenWithAirports(
+            @Name("origin") Node origin,
+            @Name("destination") Node destination,
+            @Name("date") LocalDate date,
+            @Name("airports") List<Node> airports,
+            @Name(value = "maxStopovers", defaultValue = "3") Long maxStopovers,
+            @Name(value = "maxPrice", defaultValue = "500.00") Double maxPrice
+    ) {
+        FlightsBetweenService service = new FlightsBetweenService(db, guard);
 
-        TraversalDescription td = db.traversalDescription()
-                .depthFirst()
-                .uniqueness( Uniqueness.NODE_PATH )
-                .expand( expander, initialState )
-//                .evaluator( Evaluators.toDepth( maxStopovers.intValue() * 4 ) )
-//                .evaluator( Evaluators.endNodeIs( Evaluation.INCLUDE_AND_PRUNE, Evaluation.EXCLUDE_AND_CONTINUE, destination ) )
-                .evaluator( evaluator );
-
-
-        return td.traverse( origin )
-                .stream()
-                .map( path -> new FlightResult( path, origin, destination ) );
+        return service.between(origin, destination, date, maxPrice, maxStopovers, new HashSet<Node>(airports));
     }
 
 }

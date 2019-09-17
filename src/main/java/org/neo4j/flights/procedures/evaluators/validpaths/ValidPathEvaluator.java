@@ -1,6 +1,5 @@
 package org.neo4j.flights.procedures.evaluators.validpaths;
 
-import org.neo4j.flights.procedures.DiscoveryState;
 import org.neo4j.flights.procedures.expanders.validpaths.ValidPathState;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;

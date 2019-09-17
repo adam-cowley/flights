@@ -1,11 +1,7 @@
-package org.neo4j.flights.procedures.evaluators.getflights;
+package org.neo4j.flights.procedures.services.flightsbetween;
 
 
-import java.util.Collections;
-
-import org.neo4j.flights.procedures.DiscoveryState;
-import org.neo4j.flights.procedures.expanders.getflights.FlightExpander;
-import org.neo4j.flights.procedures.expanders.validpaths.ValidPathState;
+import org.neo4j.flights.procedures.services.flightsbetween.DiscoveryState;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.traversal.BranchState;
@@ -36,6 +32,11 @@ public class FlightEvaluator implements PathEvaluator<DiscoveryState> {
         }
 
         DiscoveryState currentState = state.getState();
+
+        // Apply the last segment node?
+//        if ( path.endNode().equals( destination ) ) {
+//            currentState = currentState.applySegment( path.lastRelationship().getStartNode() );
+//        }
 
 //        System.out.println("");
 //        System.out.println("--");

@@ -1,6 +1,7 @@
-package org.neo4j.flights.procedures.expanders.validpaths;
+package org.neo4j.flights.procedures.services.validroutes;
 
 import org.neo4j.flights.procedures.RelationshipTypes;
+import org.neo4j.flights.procedures.expanders.validpaths.ValidPathState;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.PathExpander;
@@ -42,6 +43,7 @@ public class ValidPathExpander implements PathExpander<ValidPathState> {
 
     @Override
     public PathExpander<ValidPathState> reverse() {
+
         return null;
     }
 }

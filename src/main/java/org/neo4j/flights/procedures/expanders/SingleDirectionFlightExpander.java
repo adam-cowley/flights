@@ -2,18 +2,14 @@ package org.neo4j.flights.procedures.expanders;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.neo4j.flights.procedures.DateUtils;
-import org.neo4j.flights.procedures.DiscoveryState;
+import org.neo4j.flights.procedures.services.flightsbetween.DiscoveryState;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.BranchState;
 import org.neo4j.procedure.TerminationGuard;
 

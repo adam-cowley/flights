@@ -1,6 +1,6 @@
 package org.neo4j.flights.procedures.expanders;
 
-import org.neo4j.flights.procedures.DiscoveryState;
+import org.neo4j.flights.procedures.services.flightsbetween.DiscoveryState;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.Relationship;

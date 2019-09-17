@@ -1,37 +1,5 @@
 package org.neo4j.flights.procedures;
 
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
-import org.neo4j.cypher.internal.compiler.v3_1.commands.expressions.DistanceCalculator;
-import org.neo4j.cypher.internal.v3_4.functions.Distance;
-import org.neo4j.flights.procedures.evaluators.validpaths.ValidPathCollisionEvaluator;
-import org.neo4j.flights.procedures.evaluators.validpaths.ValidPathEvaluator;
-import org.neo4j.flights.procedures.expanders.SingleDirectionFlightExpander;
-import org.neo4j.flights.procedures.expanders.validpaths.BidirectionalValidPathExpander;
-import org.neo4j.flights.procedures.expanders.validpaths.ValidPathExpander;
-import org.neo4j.flights.procedures.expanders.validpaths.ValidPathState;
-import org.neo4j.flights.procedures.result.FlightResult;
-import org.neo4j.flights.procedures.result.AirportRouteResult;
-import org.neo4j.graphalgo.GraphAlgoFactory;
-import org.neo4j.graphalgo.PathFinder;
-import org.neo4j.graphalgo.WeightedPath;
-import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.spatial.Point;
-import org.neo4j.graphdb.traversal.*;
-import org.neo4j.procedure.Context;
-import org.neo4j.procedure.Name;
-import org.neo4j.procedure.Procedure;
-import org.neo4j.procedure.TerminationGuard;
-import org.neo4j.values.storable.CRSCalculator;
-import org.neo4j.values.storable.CoordinateReferenceSystem;
-import org.neo4j.values.storable.PointValue;
-
 public class GetFlights
 {
 

@@ -1,4 +1,4 @@
-package org.neo4j.flights.procedures.expanders.getflights;
+package org.neo4j.flights.procedures.services.flightsbetween;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.neo4j.flights.procedures.DiscoveryState;
+import org.neo4j.flights.procedures.services.flightsbetween.DiscoveryState;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
@@ -24,8 +24,6 @@ import static org.neo4j.flights.procedures.Labels.AirportDay;
 import static org.neo4j.flights.procedures.Labels.AirportDestination;
 import static org.neo4j.flights.procedures.Labels.Segment;
 import static org.neo4j.flights.procedures.Properties.PROPERTY_CODE;
-import static org.neo4j.flights.procedures.Properties.PROPERTY_COST;
-import static org.neo4j.flights.procedures.Properties.PROPERTY_STOPOVERS;
 
 public class FlightExpander implements PathExpander<DiscoveryState>
 {
@@ -47,13 +45,16 @@ public class FlightExpander implements PathExpander<DiscoveryState>
     private final long minStopoverHours = 1;
     private final long maxStopoverHours = 6;
 
-    public FlightExpander( TerminationGuard guard, ZonedDateTime start, Set<Node> airports, Double maxPrice, Long maxStopovers) {
+    private final LocalDateTime stopAt;
+
+    public FlightExpander( TerminationGuard guard, ZonedDateTime start, Set<Node> airports, Double maxPrice, Long maxStopovers, LocalDateTime stopAt) {
         this.guard = guard;
         this.start = start;
         this.airports = airports;
 
         this.maxStopovers = maxStopovers;
         this.maxPrice = maxPrice;
+        this.stopAt = stopAt;
 
         for ( Node airport: airports ) {
             airportCodes.add( (String) airport.getProperty(PROPERTY_CODE) );
@@ -75,12 +76,11 @@ public class FlightExpander implements PathExpander<DiscoveryState>
     @Override
     public Iterable<Relationship> expand( Path path, BranchState<DiscoveryState> state )
     {
-//        // Stop expanding?
-//        DiscoveryState currentState = state.getState();
+        // Guarantee sub-second performance
+        if ( stopAt.isBefore( LocalDateTime.now() ) ) {
+            return Collections.EMPTY_LIST;
+        }
 
-//        if ( currentState.getPrice() > maxPrice || currentState.getStopovers() > maxStopovers ) {
-//            return Collections.EMPTY_LIST;
-//        }
         if ( path.length() == 0 ) {
             state.setState( state.getState().copy().setMinimumDeparture( start ) );
         }

@@ -1,11 +1,10 @@
-package org.neo4j.flights.procedures;
+package org.neo4j.flights.procedures.services.flightsbetween;
 
 import java.time.Period;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAmount;
 
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 
 import static org.neo4j.flights.procedures.Properties.PROPERTY_COST;
 import static org.neo4j.flights.procedures.Properties.PROPERTY_STOPOVERS;
@@ -14,7 +13,7 @@ public class DiscoveryState {
 
     public TemporalAmount duration;
     public Long stopovers;
-    public Double price;
+    private Double price;
 
     public ZonedDateTime minimumDeparture;
 

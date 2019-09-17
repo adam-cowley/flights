@@ -10,7 +10,6 @@ public class ValidPathCollisionEvaluator implements Evaluator {
 
     @Override
     public Evaluation evaluate(Path path) {
-        System.out.println("Evaluate: "+ path.toString());
         return Evaluation.INCLUDE_AND_PRUNE;
     }
 
