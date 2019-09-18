@@ -1,5 +1,7 @@
 package org.neo4j.flights.procedures.services.flightsbetween;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import org.neo4j.flights.procedures.FlightCache;
 import org.neo4j.flights.procedures.result.FlightResult;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -22,10 +24,13 @@ public class FlightsBetweenService {
 
     private final static long MAX_SECONDS = 3;
     private final LocalDateTime stopAt = LocalDateTime.now().plusSeconds(MAX_SECONDS);
+    private final Cache<FlightCache.Flight, Double> cache;
 
     public FlightsBetweenService(GraphDatabaseService db, TerminationGuard guard) {
         this.db = db;
         this.guard = guard;
+
+        cache = FlightCache.create();
     }
 
     public Stream<FlightResult> between(Node origin, Node destination, LocalDate date, Double maxPrice, Long maxStopovers, Set<Node> airports) {
@@ -35,10 +40,10 @@ public class FlightsBetweenService {
         InitialBranchState.State<DiscoveryState> initialState = new InitialBranchState.State<>( new DiscoveryState(), new DiscoveryState() );
 
         // Expander
-        FlightExpander expander = new FlightExpander( guard, startTime, airports, maxPrice, maxStopovers, stopAt );
+        FlightExpander expander = new FlightExpander( guard, startTime, airports, maxPrice, maxStopovers, stopAt, cache );
 
         // Evaluator
-        FlightEvaluator evaluator = new FlightEvaluator(destination, maxPrice, maxStopovers);
+        FlightEvaluator evaluator = new FlightEvaluator(destination, maxPrice, maxStopovers, cache);
 
         TraversalDescription td = db.traversalDescription()
                 .depthFirst()

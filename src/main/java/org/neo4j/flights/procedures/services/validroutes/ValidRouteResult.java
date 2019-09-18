@@ -41,4 +41,11 @@ public class ValidRouteResult {
         this.cost = cost;
     }
 
+    public double getCost() {
+        return cost;
+    }
+
+    public double getDistance() {
+        return distance;
+    }
 }

@@ -1,0 +1,10 @@
+CREATE (s1:Segment {code: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0001", provider: 'AB', price: rand() * 10, updatedAt: localdatetime() - duration('PT'+ toInteger(rand() * 5) +'H')})
+CREATE (s2:Segment {code: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0002", provider: 'AB', price: rand() * 10, updatedAt: localdatetime() - duration('PT'+ toInteger(rand() * 5) +'H')})
+CREATE (s3:Segment {code: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0003", provider: 'AB', price: rand() * 10, updatedAt: localdatetime() - duration('PT'+ toInteger(rand() * 5) +'H')})
+CREATE (s4:Segment {code: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0004", provider: 'AB', price: rand() * 10, updatedAt: localdatetime() - duration('PT'+ toInteger(rand() * 5) +'H')})
+CREATE (s5:Segment {code: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0005", provider: 'AX', price: 22.99, updatedAt: localdatetime() - duration('PT'+ toInteger(rand() * 5) +'H')})
+CREATE (s6:Segment {code: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0006", provider: 'AB', price: 10.00, updatedAt: localdatetime() - duration('PT'+ toInteger(rand() * 5) +'H')})
+
+CREATE (updatePrice:Segment     {code: "UPDATEPRICEMNOPQRSSTUVWXYZ1234", provider: 'AB', price: 10.00, updatedAt: localdatetime() - duration('P2M')})
+CREATE (updateTimestamp:Segment {code: "UPDATETIMESTAMPQRSSTUVWXYZ1234", provider: 'AB', price: 10.00, updatedAt: localdatetime() - duration('PT5H')})
+CREATE (ignore:Segment          {code: "IGNORETHISONEOPQRSSTUVWXYZ1234", provider: 'AB', price: 10.00, updatedAt: localdatetime() - duration('PT10M')})

@@ -2,29 +2,22 @@ package org.neo4j.flights;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.neo4j.flights.procedures.GetFlights;
-import org.neo4j.flights.procedures.ValidRoutes;
+import org.neo4j.flights.procedures.ReadProcedures;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.harness.junit.Neo4jRule;
 
 import java.io.File;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
 
-public class ValidRoutesTest {
+public class ReadProceduresTest {
 
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
-            .withProcedure( ValidRoutes.class )
+            .withProcedure( ReadProcedures.class )
             .withFixture("CREATE CONSTRAINT ON (node:Airport) ASSERT (node.code) IS UNIQUE")
             .withFixture("CREATE CONSTRAINT ON (node:AirportDay) ASSERT (node.code) IS UNIQUE")
             .withFixture("CREATE CONSTRAINT ON (node:AirportDestination) ASSERT (node.code) IS UNIQUE")
@@ -45,7 +38,7 @@ public class ValidRoutesTest {
 
 
     @Test
-    public void shouldFindValidRoutes() {
+    public void shouldFindValidRoutesWithNoDirectRoutes() {
         GraphDatabaseService db = neo4j.getGraphDatabaseService();
 
         try ( Transaction tx = db.beginTx() ) {
@@ -79,7 +72,7 @@ public class ValidRoutesTest {
     }
 
     @Test
-    public void shouldFindFlightsBetweenAirportWithNoStopovers() {
+    public void shouldFindFlightsBetweenAirportDirectRoutes() {
         GraphDatabaseService db = neo4j.getGraphDatabaseService();
 
         try ( Transaction tx = db.beginTx() ) {
@@ -145,11 +138,39 @@ public class ValidRoutesTest {
     }
 
     @Test
-    public void traverse() {
+    public void shouldGetValidRoutesStartingAtOneHop() {
         GraphDatabaseService db = neo4j.getGraphDatabaseService();
 
         try ( Transaction tx = db.beginTx() ) {
-            Result res = db.execute( "CALL flights.validRoutesTraverse('IBZ', 'JFK')" );
+            Result res = db.execute( "CALL flights.validRoutes('IBZ', 'MAD')" );
+
+            System.out.println("");
+            System.out.println("--");
+
+            assertTrue(res.hasNext());
+
+            int routes = 0;
+
+            while ( res.hasNext() ) {
+                Map<String, Object> row = res.next();
+
+                routes ++;
+
+                System.out.println("");
+                System.out.println("--");
+                System.out.println("RES: "+ row.get("route"));
+            }
+
+            System.out.println(routes);
+        }
+    }
+
+    @Test
+    public void shouldGetValidRoutesStartingAtTwoHops() {
+        GraphDatabaseService db = neo4j.getGraphDatabaseService();
+
+        try ( Transaction tx = db.beginTx() ) {
+            Result res = db.execute( "CALL flights.validRoutes('IBZ', 'JFK')" );
 
             System.out.println("");
             System.out.println("--");

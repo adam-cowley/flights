@@ -1,15 +1,12 @@
 package org.neo4j.flights.procedures.result;
 
 import java.time.ZonedDateTime;
-import java.time.temporal.TemporalAmount;
-import java.time.temporal.TemporalUnit;
 
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 
-import static org.neo4j.flights.procedures.Labels.Airport;
 import static org.neo4j.flights.procedures.Labels.Segment;
-import static org.neo4j.flights.procedures.Properties.PROPERTY_COST;
+import static org.neo4j.flights.procedures.Properties.PRICE;
 
 public class FlightResult {
     public Path path;
@@ -36,7 +33,7 @@ public class FlightResult {
 
         for ( Node node : path.nodes() ) {
             if ( node.hasLabel( Segment ) ) {
-                cost += (Double) node.getProperty( PROPERTY_COST );
+                cost += (Double) node.getProperty(PRICE);
 
 
             }

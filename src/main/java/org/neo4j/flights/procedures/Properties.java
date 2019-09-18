@@ -2,10 +2,11 @@ package org.neo4j.flights.procedures;
 
 public class Properties {
 
-    public static final String PROPERTY_CODE = "code";
-    public static final String PROPERTY_COST = "price";
-    public static final String PROPERTY_STOPOVERS = "numStopovers";
-    public static final String PROPERTY_COORDINATES = "coordinates";
-    public static final String PROPERTY_DISTANCE = "distance";
+    public static final String CODE = "code";
+    public static final String PRICE = "price";
+    public static final String PROVIDER = "provider";
+    public static final String STOPOVERS = "numStopovers";
+    public static final String COORDINATES = "coordinates";
+    public static final String UPDATED_AT = "updatedAt";
 
 }

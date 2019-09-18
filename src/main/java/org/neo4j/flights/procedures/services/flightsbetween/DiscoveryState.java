@@ -6,8 +6,8 @@ import java.time.temporal.TemporalAmount;
 
 import org.neo4j.graphdb.Node;
 
-import static org.neo4j.flights.procedures.Properties.PROPERTY_COST;
-import static org.neo4j.flights.procedures.Properties.PROPERTY_STOPOVERS;
+import static org.neo4j.flights.procedures.Properties.PRICE;
+import static org.neo4j.flights.procedures.Properties.STOPOVERS;
 
 public class DiscoveryState {
 
@@ -64,8 +64,8 @@ public class DiscoveryState {
     }
 
     public DiscoveryState applySegment( Node segment ) {
-        increasePrice( (Double) segment.getProperty(PROPERTY_COST) );
-        increaseStopovers( (Long) segment.getProperty(PROPERTY_STOPOVERS) );
+        increasePrice( (Double) segment.getProperty(PRICE) );
+        increaseStopovers( (Long) segment.getProperty(STOPOVERS) );
 
         return this;
     }

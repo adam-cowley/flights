@@ -12,11 +12,17 @@ repositories {
 }
 
 project.ext {
-    neo4j_version = "3.5.4"
+    neo4j_version = "3.5.9"
 }
 
 dependencies {
     compile group: "org.neo4j", name:"neo4j", version:project.neo4j_version
+
+    // Caffeine?
+    compile 'com.github.ben-manes.caffeine:caffeine:2.5.5'
+
+    // ChronicleMap?
+    compile 'net.openhft:chronicle-map:3.17.2'
 
     testCompile group: 'org.neo4j.test', name: 'neo4j-harness', version: project.neo4j_version
     testCompile group: 'junit', name: 'junit', version: '4.12'
