@@ -1,10 +1,10 @@
 package org.neo4j.flights.procedures.write;
 
 
+import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.harness.junit.Neo4jRule;
@@ -17,6 +17,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.neo4j.flights.procedures.write.ImportResult.*;
 
 public class ImportProceduresTest {
 
@@ -29,6 +30,13 @@ public class ImportProceduresTest {
                 )
             );
 
+    @AfterClass
+    public static void cleanUp() {
+        File segmentStore = new File(System.getProperty("user.home") + "/segments.dat");
+
+        segmentStore.delete();
+    }
+
     @Test
     public void shouldWarmUp() {
         GraphDatabaseService db = neo4j.getGraphDatabaseService();
@@ -40,8 +48,6 @@ public class ImportProceduresTest {
                 Map<String, Object> row = res.next();
 
                 assertEquals("ok", row.get("status"));
-                // TODO: 10?!
-//                assertEquals(9, row.get("size"));
             }
         }
     }
@@ -51,21 +57,57 @@ public class ImportProceduresTest {
         GraphDatabaseService db = neo4j.getGraphDatabaseService();
 
         try ( Transaction tx = db.beginTx() ) {
+            /*
+            [
+              {
+                origCoordinates: { x: 2.82493, y: 41.98311 },
+                arrivalTimestamp: 1571985900000,
+                code: 'GROEIN201910250430201910250645',
+                arrivalDay: '2019102506',
+                origin: 'GRO',
+                destination: 'EIN',
+                numStopovers: 0,
+                departureDay: '2019102504',
+                updateTimestamp: 1566977734364,
+                searchProviders: [ 'TF' ],
+                destCoordinates: { x: 5.469999, y: 51.439998 },
+                provider: 'TF',
+                price: 62.99,
+                departureTimestamp: 1571978400000,
+                departureDateTime: '201910250440',
+                arrivalDateTime: '201910250645'
+              }
+            ]
+             */
             Map<String, Object> params = new HashMap<String, Object>() {{
-                put("code", "ABCDEFGHIJKLMNOPQRSTUVWXYZ9999");
+                put("code", "CREATEITIJKLMNOPQRSTUVWXYZ9999");
                 put("provider", "AB");
                 put("price", 22.00);
+                put("origin", "A1");
+                put("destination", "A2");
+                put("numStopovers", 0L);
+                put("arrivalTimestamp", 1571985900000L);
+                put("departureTimestamp", 1571985900000L);
+
             }};
 
-            Result res = db.execute("CALL flights.import.batch([ {code: $code, provider: $provider, price: $price} ])", params);
+            Result res = db.execute("CALL flights.import.viaCache([ {" +
+                    "code: $code, " +
+                    "provider: $provider, " +
+                    "price: $price," +
+                    "origin: $origin," +
+                    "destination: $destination," +
+                    "numStopovers: $numStopovers," +
+                    "arrives: datetime({epochMillis: $arrivalTimestamp})," +
+                    "departs: datetime({epochMillis: $departureTimestamp})" +
+                    "} ])", params);
 
             while ( res.hasNext() ) {
                 Map<String, Object> row = res.next();
 
-                Node node = (Node) row.get("node");
 
-                assertEquals(params.get("code"), node.getProperty("code"));
-                assertEquals(params.get("price"), node.getProperty("price"));
+                assertEquals(row.get("code"), params.get("code"));
+                assertEquals(STATUS_CREATED, row.get("status"));
             }
         }
     }
@@ -82,16 +124,13 @@ public class ImportProceduresTest {
                 put("updatedAt", LocalDateTime.now());
             }};
 
-            Result res = db.execute("CALL flights.import.batch([ {code: $code, provider: $provider, price: $price, updatedAt: $updatedAt} ])", params);
+            Result res = db.execute("CALL flights.import.viaCache([ {code: $code, provider: $provider, price: $price, updatedAt: $updatedAt} ])", params);
 
             while ( res.hasNext() ) {
                 Map<String, Object> row = res.next();
 
-                Node node = (Node) row.get("node");
-
-                assertEquals(params.get("code"), node.getProperty("code"));
-                assertEquals(params.get("price"), node.getProperty("price"));
-                assertEquals(params.get("updatedAt"), node.getProperty("updatedAt"));
+                assertEquals(params.get("code"), row.get("code"));
+                assertEquals(STATUS_UPDATED_VIA_CACHE, row.get("status"));
             }
         }
     }
@@ -108,18 +147,15 @@ public class ImportProceduresTest {
                 put("updatedAt", LocalDateTime.now(ZoneOffset.UTC));
             }};
 
-            Result res = db.execute("CALL flights.import.batch([ {code: $code, provider: $provider, price: $price, updatedAt: $updatedAt} ])", params);
+            Result res = db.execute("CALL flights.import.viaCache([ {code: $code, provider: $provider, price: $price, updatedAt: $updatedAt} ])", params);
 
             while ( res.hasNext() ) {
                 Map<String, Object> row = res.next();
 
-                // TODO: Null returned instead of node, is this OK?
-                assertEquals(row.get("node"), null);
+                assertEquals(params.get("code"), row.get("code"));
+                assertEquals(STATUS_IGNORED_VIA_CACHE, row.get("status"));
             }
         }
     }
-
-
-
 
 }
