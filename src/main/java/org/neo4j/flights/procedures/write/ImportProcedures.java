@@ -80,7 +80,7 @@ public class ImportProcedures {
                 .map(this::importSegmentViaCache);
     }
 
-    @Procedure(name="flights.import.segment")
+    @Procedure(name="flights.import.segment", mode = Mode.WRITE)
     public Stream<ImportResult> importSegment(@Name("row") Map<String, Object> row) {
         String code = (String) row.get(CODE);
         double price = (double) row.get(PRICE);
@@ -228,7 +228,7 @@ public class ImportProcedures {
             airportDay.createRelationshipTo(airportDestination, RelationshipType.withName(destination));
         }
 
-        return airportDay;
+        return airportDestination;
     }
 
 
