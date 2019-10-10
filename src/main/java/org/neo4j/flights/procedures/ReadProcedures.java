@@ -12,9 +12,12 @@ import org.neo4j.procedure.Procedure;
 import org.neo4j.procedure.TerminationGuard;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.neo4j.flights.procedures.Labels.Airport;
@@ -37,6 +40,7 @@ public class ReadProcedures {
 
     private final static double maxDistanceModifier = 1.2D;
 
+    private final static FlightCache cache = new FlightCache();
 
     @Procedure( name = "flights.validRoutes" )
     public Stream<ValidRouteResult> validRoutes(
@@ -62,24 +66,29 @@ public class ReadProcedures {
             @Name("destinationCode") String destinationCode,
             @Name("date") LocalDate date,
             @Name(value = "maxStopovers", defaultValue = "3") Long maxStopovers,
-            @Name(value = "maxPrice", defaultValue = "500.00") Double maxPrice
+            @Name(value = "maxPrice", defaultValue = "500.00") Double maxPrice,
+            @Name(value = "useCache", defaultValue = "true") Boolean useCache
     ) {
+        LocalDateTime startedAt = LocalDateTime.now();
+
         Node origin = db.findNode( Airport, CODE, originCode );
         Node destination = db.findNode( Airport, CODE, destinationCode );
 
-        Stream<ValidRouteResult> validRoutes = validRoutes(originCode, destinationCode, maxStopovers, maxPrice, 10L);
+//        Set<Path> suggestions = new HashSet<>();
 
-        Set<Node> airports = new HashSet<>();
-
-        validRoutes.forEach( result -> {
-            airports.addAll( result.airports );
-        });
-
-        airports.remove( origin );
-
-        FlightsBetweenService service = new FlightsBetweenService(db, guard);
-
-        return service.between(origin, destination, date, maxPrice, maxStopovers, airports);
+        return validRoutes(originCode, destinationCode, maxStopovers, maxPrice, 10L)
+                .map(route -> getFlightsBetweenWithAirports(origin, destination, date, route.airports, maxStopovers, maxPrice, useCache))
+                .flatMap(flightResultStream -> flightResultStream)
+                .distinct();
+//                .filter(result -> {
+//                    Path path = result.getPath();
+//                    if ( suggestions.contains( path ) ) {
+//                        return false;
+//                    }
+//
+//                    suggestions.add( path );
+//                    return true;
+//                });
     }
 
     @Procedure(name = "flights.betweenWithAirports")
@@ -89,11 +98,24 @@ public class ReadProcedures {
             @Name("date") LocalDate date,
             @Name("airports") List<Node> airports,
             @Name(value = "maxStopovers", defaultValue = "3") Long maxStopovers,
-            @Name(value = "maxPrice", defaultValue = "500.00") Double maxPrice
+            @Name(value = "maxPrice", defaultValue = "500.00") Double maxPrice,
+            @Name(value = "useCache", defaultValue = "true") Boolean useCache
     ) {
-        FlightsBetweenService service = new FlightsBetweenService(db, guard);
+        FlightsBetweenService service = new FlightsBetweenService(db, guard, cache);
 
-        return service.between(origin, destination, date, maxPrice, maxStopovers, new HashSet<Node>(airports));
+        return service.between(origin, destination, date, maxPrice, maxStopovers, new HashSet<Node>(airports), useCache, LocalDateTime.now());
+    }
+
+    @Procedure(name="flights.cache")
+    public Stream<FlightCache.FlightCost> getCache() {
+        return cache.getCache();
+    }
+
+    @Procedure(name="flights.clearCache")
+    public Stream<FlightCache.FlightCost> clearCache() {
+        cache.clear();
+
+        return cache.getCache();
     }
 
 }

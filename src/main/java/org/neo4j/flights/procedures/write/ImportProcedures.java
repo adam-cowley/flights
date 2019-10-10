@@ -80,8 +80,20 @@ public class ImportProcedures {
                 .map(this::importSegmentViaCache);
     }
 
+    @Procedure(name="flights.import.segments", mode = Mode.WRITE)
+    public Stream<ImportResult> importSegments(@Name("batch") List< Map<String, Object> > batch) {
+        return batch.stream()
+                .map(this::importSegment);
+    }
+
     @Procedure(name="flights.import.segment", mode = Mode.WRITE)
-    public Stream<ImportResult> importSegment(@Name("row") Map<String, Object> row) {
+    public Stream<ImportResult> importSegmentReturnStream(@Name("row") Map<String, Object> row) {
+        return Stream.of( importSegment(row) );
+    }
+
+//    @Procedure(name="flights.import.segment", mode = Mode.WRITE)
+//public Stream<ImportResult> importSegment(@Name("row") Map<String, Object> row) {
+    public ImportResult importSegment(@Name("row") Map<String, Object> row) {
         String code = (String) row.get(CODE);
         double price = (double) row.get(PRICE);
         LocalDateTime updatedAt = (LocalDateTime) row.getOrDefault(UPDATED_AT, LocalDateTime.now());
@@ -96,16 +108,16 @@ public class ImportProcedures {
                 node.setProperty(PRICE, price);
 //                node.setProperty(UPDATED_AT, updatedAt);
 
-                return Stream.of( new ImportResult(code, ImportResult.STATUS_UPDATED_VIA_NODE) );
+                return new ImportResult(code, ImportResult.STATUS_UPDATED_VIA_NODE);
             }
         } else {
             // Node needs to be created
             node = createSegment(row);
 
-            return Stream.of( new ImportResult(code, ImportResult.STATUS_CREATED) );
+            return new ImportResult(code, ImportResult.STATUS_CREATED);
         }
 
-        return Stream.of( new ImportResult(code, ImportResult.STATUS_IGNORED_VIA_NODE) );
+        return new ImportResult(code, ImportResult.STATUS_IGNORED_VIA_NODE);
     }
 
     private ImportResult importSegmentViaCache(Map<String, Object> row) {
@@ -142,9 +154,10 @@ public class ImportProcedures {
         }
 
         // Import segment
-        Optional<ImportResult> first = importSegment(row).findFirst();
+//        Optional<ImportResult> first = importSegment(row).findFirst();
+//        return first.get();
 
-        return first.get();
+        return importSegment(row);
     }
 
     private Node mergeAirport(String code) {

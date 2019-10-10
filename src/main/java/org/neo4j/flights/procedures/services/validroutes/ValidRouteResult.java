@@ -4,6 +4,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
 import org.neo4j.graphdb.Relationship;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +14,7 @@ public class ValidRouteResult {
     public List<Node> airports;
     public double cost;
     public double distance;
+    public LocalDateTime availableAfter;
 
     public ValidRouteResult(Path route, List<Node> airports, double distance, double cost) {
         this.route = route;
@@ -39,6 +41,8 @@ public class ValidRouteResult {
         this.route = route;
         this.distance = distance;
         this.cost = cost;
+
+        availableAfter = LocalDateTime.now();
     }
 
     public double getCost() {

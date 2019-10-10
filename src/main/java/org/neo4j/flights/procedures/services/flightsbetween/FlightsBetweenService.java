@@ -22,28 +22,28 @@ public class FlightsBetweenService {
     private final GraphDatabaseService db;
     private final TerminationGuard guard;
 
-    private final static long MAX_SECONDS = 3;
-    private final LocalDateTime stopAt = LocalDateTime.now().plusSeconds(MAX_SECONDS);
-    private final Cache<FlightCache.Flight, Double> cache;
+    private final static long MAX_NANOS = (long) 3e+8;
+    private final LocalDateTime stopAt = LocalDateTime.now().plusNanos(MAX_NANOS);
+    private final FlightCache cache;
 
-    public FlightsBetweenService(GraphDatabaseService db, TerminationGuard guard) {
+    public FlightsBetweenService(GraphDatabaseService db, TerminationGuard guard, FlightCache cache) {
         this.db = db;
         this.guard = guard;
 
-        cache = FlightCache.create();
+        this.cache = cache;
     }
 
-    public Stream<FlightResult> between(Node origin, Node destination, LocalDate date, Double maxPrice, Long maxStopovers, Set<Node> airports) {
+    public Stream<FlightResult> between(Node origin, Node destination, LocalDate date, Double maxPrice, Long maxStopovers, Set<Node> airports, Boolean useCache, LocalDateTime routeAvailableAt) {
         ZonedDateTime startTime = date.atStartOfDay( ZoneOffset.UTC );
 
         // Initial State
         InitialBranchState.State<DiscoveryState> initialState = new InitialBranchState.State<>( new DiscoveryState(), new DiscoveryState() );
 
         // Expander
-        FlightExpander expander = new FlightExpander( guard, startTime, airports, maxPrice, maxStopovers, stopAt, cache );
+        FlightExpander expander = new FlightExpander(guard, startTime, airports, maxPrice, maxStopovers, stopAt);
 
         // Evaluator
-        FlightEvaluator evaluator = new FlightEvaluator(destination, maxPrice, maxStopovers, cache);
+        FlightEvaluator evaluator = new FlightEvaluator(destination, maxPrice, maxStopovers, cache, useCache);
 
         TraversalDescription td = db.traversalDescription()
                 .depthFirst()
@@ -53,7 +53,7 @@ public class FlightsBetweenService {
 
         return td.traverse( origin )
                 .stream()
-                .map( path -> new FlightResult( path, origin, destination ) );
+                .map( path -> new FlightResult( path, origin, destination, routeAvailableAt ) );
     }
 
 

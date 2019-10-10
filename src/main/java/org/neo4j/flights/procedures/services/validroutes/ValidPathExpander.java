@@ -8,11 +8,15 @@ import org.neo4j.graphdb.PathExpander;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.traversal.BranchState;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 public class ValidPathExpander implements PathExpander<ValidPathState> {
 
     private final double maxDistance;
+
+    private final static long MAX_NANOS = (long) 3e+8;
+    private final LocalDateTime stopAt = LocalDateTime.now().plusNanos(MAX_NANOS);
 
     public ValidPathExpander(double maxDistance) {
         this.maxDistance = maxDistance;
@@ -34,7 +38,7 @@ public class ValidPathExpander implements PathExpander<ValidPathState> {
         // Update Path state
         setState(path, state);
 
-        if ( state.getState().getDistance() > maxDistance ) {
+        if ( state.getState().getDistance() > maxDistance || LocalDateTime.now().isAfter(stopAt) ) {
             return Collections.EMPTY_LIST;
         }
 

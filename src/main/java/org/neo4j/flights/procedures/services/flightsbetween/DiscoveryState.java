@@ -15,6 +15,7 @@ public class DiscoveryState {
     public Long stopovers;
     private Double price;
 
+    public ZonedDateTime firstDeparture;
     public ZonedDateTime minimumDeparture;
 
     public DiscoveryState() {
@@ -24,9 +25,16 @@ public class DiscoveryState {
     }
 
     public DiscoveryState(DiscoveryState discoveryState) {
+        this.firstDeparture = discoveryState.firstDeparture;
         this.duration = discoveryState.duration;
         this.stopovers = discoveryState.stopovers;
         this.price = discoveryState.price;
+    }
+
+    public DiscoveryState setFirstDeparture(ZonedDateTime firstDeparture) {
+        this.firstDeparture = firstDeparture;
+
+        return this;
     }
 
     public DiscoveryState increasePrice(Double price) {

@@ -1,5 +1,6 @@
 package org.neo4j.flights;
 
+import com.sun.xml.bind.v2.runtime.output.SAXOutput;
 import org.junit.Rule;
 import org.junit.Test;
 import org.neo4j.flights.procedures.ReadProcedures;
@@ -11,6 +12,7 @@ import org.neo4j.harness.junit.Neo4jRule;
 import java.io.File;
 import java.util.Map;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 public class ReadProceduresTest {
@@ -33,7 +35,7 @@ public class ReadProceduresTest {
                             getClass().getClassLoader().getResource("cypher/fliesto.cypher").getFile()
                     )
             )
-//            .copyFrom( new File("/Users/adam/Library/Application Support/Neo4j Desktop/Application/neo4jDatabases/database-f6b4d488-a224-4bd8-9604-db6da4a0f483/installation-3.5.8/data") )
+            //.copyFrom( new File("/Users/adam/Library/Application Support/Neo4j Desktop/Application/neo4jDatabases/database-f6b4d488-a224-4bd8-9604-db6da4a0f483/installation-3.5.8/data") )
             ;
 
 
@@ -56,60 +58,48 @@ public class ReadProceduresTest {
 
                 routes ++;
 
-//                List<Node> ap = (List<Node>) row.get("airports");
-
                 System.out.println("");
                 System.out.println("--");
-                System.out.println(row.get("route"));
-
-//                for ( Node a : ap ) {
-//                    System.out.println(a.getProperty("code"));
-//                }
+                System.out.println(row.get("route") + " == "+ row.get("cost"));
             }
 
             System.out.println(routes);
         }
     }
 
-    @Test
-    public void shouldFindFlightsBetweenAirportDirectRoutes() {
+    public void assertFlightResults(String query, int expectedResults) {
         GraphDatabaseService db = neo4j.getGraphDatabaseService();
 
         try ( Transaction tx = db.beginTx() ) {
-            Result res = db.execute( "CALL flights.between('IBZ', 'MAD', date('2019-09-22'))" );
+            Result res = db.execute("CALL flights.between('IBZ', 'MAD', date('2019-09-22'))");
 
             System.out.println("");
             System.out.println("");
 
+            int results = 0;
 
             while ( res.hasNext() ) {
+                results++;
+
                 Map<String,Object> row = res.next();
 
                 System.out.println("");
                 System.out.println("--");
-                System.out.println("Res:" + row);
+                System.out.println(row.get("path") + " == "+ row.get("cost"));
             }
+
+            assertEquals(expectedResults, results);
         }
     }
 
     @Test
+    public void shouldFindFlightsBetweenAirportDirectRoutes() {
+        assertFlightResults("CALL flights.between('IBZ', 'MAD', date('2019-09-22'))", 1);
+    }
+
+    @Test
     public void shouldFindFlightsBetweenAirportWithOneStopovers() {
-        GraphDatabaseService db = neo4j.getGraphDatabaseService();
-
-        try ( Transaction tx = db.beginTx() ) {
-            Result res = db.execute( "CALL flights.between('IBZ', 'JFK', date('2019-09-22'))" );
-
-            System.out.println("");
-            System.out.println("");
-
-            while ( res.hasNext() ) {
-                Map<String,Object> row = res.next();
-
-                System.out.println("");
-                System.out.println("--");
-                System.out.println("Res:" + row);
-            }
-        }
+        assertFlightResults("CALL flights.between('IBZ', 'JFK', date('2019-09-22'))", 1);
     }
 
     @Test

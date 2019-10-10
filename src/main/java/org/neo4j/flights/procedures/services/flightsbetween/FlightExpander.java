@@ -9,8 +9,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import org.neo4j.flights.procedures.FlightCache;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Path;
@@ -47,9 +45,8 @@ public class FlightExpander implements PathExpander<DiscoveryState>
     private final long maxStopoverHours = 6;
 
     private final LocalDateTime stopAt;
-    private final Cache<FlightCache.Flight, Double> cache;
 
-    public FlightExpander( TerminationGuard guard, ZonedDateTime start, Set<Node> airports, Double maxPrice, Long maxStopovers, LocalDateTime stopAt, Cache<FlightCache.Flight, Double> cache) {
+    public FlightExpander( TerminationGuard guard, ZonedDateTime start, Set<Node> airports, Double maxPrice, Long maxStopovers, LocalDateTime stopAt) {
         this.guard = guard;
         this.start = start;
         this.airports = airports;
@@ -57,7 +54,6 @@ public class FlightExpander implements PathExpander<DiscoveryState>
         this.maxStopovers = maxStopovers;
         this.maxPrice = maxPrice;
         this.stopAt = stopAt;
-        this.cache = cache;
 
         for ( Node airport: airports ) {
             airportCodes.add( (String) airport.getProperty(CODE) );
