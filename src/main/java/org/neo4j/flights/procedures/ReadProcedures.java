@@ -1,10 +1,11 @@
 package org.neo4j.flights.procedures;
 
-import org.neo4j.flights.procedures.services.validroutes.ValidRouteResult;
 import org.neo4j.flights.procedures.result.FlightResult;
 import org.neo4j.flights.procedures.services.flightsbetween.FlightsBetweenService;
+import org.neo4j.flights.procedures.services.validroutes.ValidRouteResult;
 import org.neo4j.flights.procedures.services.validroutes.ValidRoutesService;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Name;
@@ -13,11 +14,8 @@ import org.neo4j.procedure.TerminationGuard;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.neo4j.flights.procedures.Labels.Airport;
@@ -74,21 +72,10 @@ public class ReadProcedures {
         Node origin = db.findNode( Airport, CODE, originCode );
         Node destination = db.findNode( Airport, CODE, destinationCode );
 
-//        Set<Path> suggestions = new HashSet<>();
-
         return validRoutes(originCode, destinationCode, maxStopovers, maxPrice, 10L)
                 .map(route -> getFlightsBetweenWithAirports(origin, destination, date, route.airports, maxStopovers, maxPrice, useCache))
                 .flatMap(flightResultStream -> flightResultStream)
                 .distinct();
-//                .filter(result -> {
-//                    Path path = result.getPath();
-//                    if ( suggestions.contains( path ) ) {
-//                        return false;
-//                    }
-//
-//                    suggestions.add( path );
-//                    return true;
-//                });
     }
 
     @Procedure(name = "flights.betweenWithAirports")
